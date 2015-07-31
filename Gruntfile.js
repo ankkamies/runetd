@@ -68,9 +68,6 @@ module.exports = function(grunt) {
       release: {
         src: 'src/js/app.js',
         dest: 'bundle.js'
-      },
-      options: {
-        transform: ['debowerify']
       }
     },
 
