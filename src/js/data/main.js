@@ -6,10 +6,14 @@ module.exports = function(game) {
     { 
       id: 'btn_play',
       spritesheet: 'assets/ui/buttons/btn_placeholder.png',
-      sizeX: 100,
-      sizeY: 50,
-      posX: 350,
-      posY: 250,
+      size: { 
+        x: 100, 
+        y: 50 
+      },
+      pos: { 
+        x: 520, 
+        y: 250 
+      },
       actionOnClick: function() {
         game.state.start('stages');
       }
@@ -17,10 +21,14 @@ module.exports = function(game) {
     { 
      id: 'btn_shop',
       spritesheet: 'assets/ui/buttons/btn_placeholder.png',
-      sizeX: 100,
-      sizeY: 50,
-      posX: 350,
-      posY: 350,
+      size: { 
+        x: 100, 
+        y: 50 
+      },
+      pos: { 
+        x: 520, 
+        y: 350 
+      },
       actionOnClick: function() {
         game.state.start('shop');
       }
@@ -28,10 +36,14 @@ module.exports = function(game) {
     { 
      id: 'btn_settings',
       spritesheet: 'assets/ui/buttons/btn_placeholder.png',
-      sizeX: 100,
-      sizeY: 50,
-      posX: 350,
-      posY: 450,
+      size: { 
+        x: 100, 
+        y: 50 
+      },
+      pos: { 
+        x: 520, 
+        y: 450 
+      },
       actionOnClick: function() {
         game.state.start('settings');
       }
@@ -39,10 +51,14 @@ module.exports = function(game) {
     {
       id: 'btn_intro',
       spritesheet: 'assets/ui/buttons/btn_placeholder.png',
-      sizeX: 100,
-      sizeY: 50,
-      posX: 0,
-      posY: 550,
+      size: { 
+        x: 100, 
+        y: 50 
+      },
+      pos: { 
+        x: 0, 
+        y: 670 
+      },
       actionOnClick: function() {
         game.state.start('intro');
       }
@@ -52,10 +68,14 @@ module.exports = function(game) {
     {
       id: 'img_logo',
       spritesheet: 'assets/ui/images/img_logo.png',
-      sizeX: 400,
-      sizeY: 100,
-      posX: 200,
-      posY: 100,
+      size: { 
+        x: 400, 
+        y: 100 
+      },
+      pos: { 
+        x: 370, 
+        y: 100 
+      },
       frames: 1
     }],
 

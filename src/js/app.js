@@ -2,9 +2,9 @@
 
 var Phaser = require('phaser');
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO);
+var game = new Phaser.Game(1140, 720, Phaser.AUTO);
 
-// Initialize data
+// Initialize menu data
 var menu = {
   main: require('./data/main.js')(game),
   shop: require('./data/shop.js')(game),

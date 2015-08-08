@@ -6,10 +6,14 @@ module.exports = function(game) {
     { 
       id: 'btn_toggle_audio',
       spritesheet: 'assets/ui/buttons/btn_placeholder.png',
-      sizeX: 100,
-      sizeY: 50,
-      posX: 50,
-      posY: 300,
+      size: { 
+        x: 100, 
+        y: 50 
+      },
+      pos: { 
+        x: 520, 
+        y: 300 
+      },
       actionOnClick: function() {
         console.log('TODO: Make settings');
       }
@@ -17,10 +21,14 @@ module.exports = function(game) {
     { 
      id: 'btn_return',
       spritesheet: 'assets/ui/buttons/btn_placeholder.png',
-      sizeX: 100,
-      sizeY: 50,
-      posX: 700,
-      posY: 550,
+      size: { 
+        x: 100, 
+        y: 50 
+      },
+      pos: { 
+        x: 1040, 
+        y: 670 
+      },
       actionOnClick: function() {
         game.state.start('main');
       }
@@ -30,10 +38,14 @@ module.exports = function(game) {
     {
       id: 'img_settings',
       spritesheet: 'assets/ui/images/img_settings.png',
-      sizeX: 400,
-      sizeY: 100,
-      posX: 100,
-      posY: 100,
+      size: { 
+        x: 400, 
+        y: 100 
+      },
+      pos: { 
+        x: 370, 
+        y: 100 
+      },
       frames: 1
     }],
 
