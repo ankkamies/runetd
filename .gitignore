@@ -28,3 +28,6 @@ node_modules
 
 # Build directory
 dist
+
+# Bundle.js
+./bundle.js

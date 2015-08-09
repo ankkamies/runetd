@@ -161,6 +161,13 @@
             },
          "spacing":0,
          "tileheight":32,
+         "tileproperties":
+            {
+             "1":
+                {
+                 "buildable":"true"
+                }
+            },
          "tilewidth":32
         }],
  "tilewidth":32,
