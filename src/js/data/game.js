@@ -48,6 +48,36 @@ module.exports = function(game) {
     text: [
     {
 
+    }],
+
+    waves: [
+    {
+      count: 10,
+      health: 100,
+      speed: 50,
+      delay: 1000,
+      spawnDelay: 1000
+    },
+    {
+      count: 15,
+      health: 150,
+      speed: 50,
+      delay: 1000,
+      spawnDelay: 750
+    },
+    {
+      count: 10,
+      health: 250,
+      speed: 75,
+      delay: 1000,
+      spawnDelay: 500
+    },
+    {
+      count: 20,
+      health: 300,
+      speed: 100,
+      delay: 1000,
+      spawnDelay: 500
     }]
   };
 };
