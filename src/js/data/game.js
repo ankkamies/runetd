@@ -54,30 +54,44 @@ module.exports = function(game) {
     {
       count: 10,
       health: 100,
-      speed: 50,
-      delay: 1000,
-      spawnDelay: 1000
+      speed: 100,
+      delay: 2000,
+      spawnDelay: 500
     },
     {
       count: 15,
       health: 150,
-      speed: 50,
-      delay: 1000,
-      spawnDelay: 750
-    },
-    {
-      count: 10,
-      health: 250,
-      speed: 75,
-      delay: 1000,
-      spawnDelay: 500
+      speed: 150,
+      delay: 2000,
+      spawnDelay: 400
     },
     {
       count: 20,
-      health: 300,
+      health: 250,
+      speed: 150,
+      delay: 2000,
+      spawnDelay: 350
+    },
+    {
+      count: 20,
+      health: 250,
+      speed: 200,
+      delay: 2000,
+      spawnDelay: 350
+    },
+    {
+      count: 99,
+      health: 100,
       speed: 100,
-      delay: 1000,
-      spawnDelay: 500
+      delay: 2000,
+      spawnDelay: 400
+    },
+    {
+      count: 1,
+      health: 1000,
+      speed: 100,
+      delay: 2000,
+      spawnDelay: 100
     }]
   };
 };

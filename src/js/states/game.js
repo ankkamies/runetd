@@ -1,6 +1,7 @@
 'use strict';
 
 var Phaser = require('phaser');
+var EasyStar = require('easystarjs');
 
 module.exports = function () {
   return {
@@ -19,6 +20,9 @@ module.exports = function () {
     buildMode: false,
     enemies: {},
     towers: {},
+    projectiles: {},
+    px: 0,
+    py: 0,
 
     init: function() {
       // Initialize variables
@@ -26,7 +30,7 @@ module.exports = function () {
       this.layers = [];
       this.path.x = [];
       this.path.y = [];
-      this.lives = 10;
+      this.lives = 100;
       this.wave.index = 0;
       this.wave.number = 0;
       this.wave.spawned = false;
@@ -90,12 +94,13 @@ module.exports = function () {
       // Create waveTimer
       this.waveTimer = this.time.create(false);
 
-      // Create groups for enemies and towers
+      // Create groups for enemies, towers and projectiles
       this.enemies = this.add.group();
       this.enemies.enableBody = true;
       this.enemies.physicsBodyType = Phaser.Physics.ARCADE;
 
       this.towers = this.add.group();
+      this.projectiles = this.add.group();
 
       // Create buttons from data
       for (var i = 0; i < this.data.buttons.length; i++) {
@@ -147,12 +152,46 @@ module.exports = function () {
       // Update the build cursor
       this.updateCursor();
 
-      // Scan for enemies and shoot
-      this.towers.forEach(function(tower) {
-        // Check collisions
-        this.physics.arcade.overlap(tower.projectiles, this.enemies, this.onEnemyHit, null, this);
+      this.updateEnemies();
 
-        // Check if current target is out of range
+      this.updateTowers();
+
+      // Collision check
+      this.physics.arcade.overlap(this.projectiles, this.enemies, this.onEnemyHit, null, this);
+
+      // If lives reach zero, game over
+      if (this.lives === 0) {
+        console.log('You lost!');
+        this.state.start('stages');
+      }
+
+      // Check if wave is complete
+      if (this.wave.spawned && this.enemies.countLiving() === 0) {
+        this.wave.spawned = false;
+        this.wave.index += 1;
+        // If there are waves left, start next one, else end game
+        if (this.wave.index < this.waves.length) {
+          this.waveTimer.add(this.waves[this.wave.index].delay, this.startNextWave, this);          
+        } else {
+          console.log('You won!');
+          this.state.start('stages');
+        }
+      }
+
+    },
+
+    updateEnemies: function() {
+      this.enemies.forEach(function(enemy) {
+        if (enemy.alive) {
+          enemy.move();
+        }
+      },this);
+    },
+
+    updateTowers: function() {
+      // Scan for enemies and shoot at them
+      this.towers.forEach(function(tower) {
+        // Check if current target is out of range or dead
         if (tower.target) {
           if (this.math.distance(tower.x, tower.y, tower.target.x, tower.target.y) > tower.range || !tower.target.alive) {
             tower.target = null;
@@ -166,6 +205,7 @@ module.exports = function () {
                 tower.target = this.enemies.children[i];
                 break;
               } else {
+                // No target found
                 tower.target = null;
               }
             }
@@ -175,26 +215,6 @@ module.exports = function () {
         // Shoot at target
         tower.shoot();
       }, this);
-
-      // If lives reach zero, game over
-      if (this.lives === 0) {
-        console.log('You lost!');
-        this.state.start('stages');
-      }
-
-      if (this.wave.spawned && this.enemies.countLiving() === 0) {
-        this.wave.spawned = false;
-        if (this.wave.index < this.waves.length) {
-          this.waveTimer.add(this.waves[this.wave.index].delay, this.startNextWave, this);          
-        }
-      }
-
-      // If last wave has finished spawning and there are no living enemies left, end game
-      if (this.wave.index === this.waves.length && this.enemies.countLiving() === 0) {
-        console.log('You won!');
-        this.state.start('stages');
-      }
-
     },
 
     updateCursor: function() {
@@ -223,20 +243,67 @@ module.exports = function () {
     },
 
     calculateRoute: function() {
-      // Get path from map
-      var pathArray = this.map.objects.Path[0].polyline;
 
-      // Fix coordinates and convert path to an array that tweens support
-      for (var i = 0;i < pathArray.length; i++) {
-        this.path.x.push(pathArray[i][0] + this.map.objects.Path[0].x); 
-        this.path.y.push(pathArray[i][1] + this.map.objects.Path[0].y); 
+      var easystar = new EasyStar.js();
+
+      var points = this.updateGrid();
+
+      easystar.setGrid(this.grid);
+      easystar.setAcceptableTiles([0]);
+      easystar.enableDiagonals();
+      easystar.disableCornerCutting();
+
+      easystar.findPath(points[0][0], points[0][1], points[1][0], points[1][1], function( path ) {
+        if (path === null) {
+          console.log("Path was not found.");
+        }
+        // Convert points to coordinates
+        for (var i = 0; i < path.length; i++) {
+          path[i].x = (path[i].x*32) + 16;
+          path[i].y = (path[i].y*32) + 16;
+        }
+        this.path = path;
+      }.bind(this));
+
+      easystar.calculate();
+    },
+
+    updateGrid: function(){
+      var map = this.map.layers[0].data;
+      var grid = [];
+      var start = [];
+      var end = [];
+
+      // Convert map
+      for (var i = 0;i < map.length;i++) {
+        grid[i] = [];
+        for (var j = 0;j < map[i].length;j++) {
+          if (map[i][j].properties.buildable) {
+            grid[i].push(1);            
+          } else {
+            if (map[i][j].properties.start) {
+              start = [j,i];
+            } else if (map[i][j].properties.end) {
+              end = [j,i];
+            }
+            grid[i].push(0);
+          }
+        }
       }
+
+      this.grid = grid;
+
+      return [start, end];
     },
 
     onEnemyHit: function(projectile, enemy) {
       enemy.health -= projectile.damage;
+      enemy.speed *= 0.9;
+
       projectile.kill();
-      if (enemy.health < 0) {
+
+      // Remove dead enemies
+      if (enemy.health <= 0) {
         this.tweens.removeFrom(enemy);
         enemy.destroy();
         this.currency += 20;
@@ -244,67 +311,83 @@ module.exports = function () {
     },
 
     startNextWave: function() {
+      this.wave.number += 1;
+      this.createWave();
+    },
+
+    createWave: function() {
+      this.createEnemies();
+
+      // Timer has autodestroy set to true so it must be created for each wave
       this.spawnTimer = this.time.create(true);
 
-      this.wave.number += 1;
-      this.wave.spawned = false;
-
-      this.spawnTimer.repeat(this.waves[this.wave.index].spawnDelay, this.waves[this.wave.index].count, this.createEnemy, this);
+      // Add timer events for spawning enemies
+      this.spawnTimer.repeat(this.waves[this.wave.index].spawnDelay, this.enemies.length, this.spawnEnemy, this);
       this.spawnTimer.start();
-
-      // When wave is complete, start next wave after a delay
       this.spawnTimer.onComplete.add(function() {
-        // Move to next wave
-        this.wave.index += 1;
         this.wave.spawned = true;
       }, this);
     },
 
-    createEnemy: function() {
-      // Add enemy to spawn point
-      var enemy = this.add.sprite(this.path.x[0], this.path.y[0], 'enemy');
-      enemy.anchor.set(0.5, 0.5);
+    createEnemies: function() {
+      // Create all enemies in the enemies group
+      this.enemies.createMultiple(this.waves[this.wave.index].count, 'enemy');
 
-      enemy.health = this.waves[this.wave.index].health;
+      // Loop through enemies to set attributes on each one
+      this.enemies.forEach(function(enemy) {
+        // Set properties
+        enemy.anchor.set(0.5, 0.5);
+        // NEW WAY
+        enemy.speed = this.waves[this.wave.index].speed;
+        enemy.maxHealth = this.waves[this.wave.index].health;
+        enemy.path = this.path.slice();
 
-      var twns = [];
+        // Set start node to first node of path and then remove it so path[0] points to next node
+        enemy.startNode = { x: enemy.path[0].x, y: enemy.path[0].y };
+        enemy.x = enemy.startNode.x;
+        enemy.y = enemy.startNode.y;
 
-      // Calculate duration between spawn point and first turning point
-      var duration = 1000 * (this.math.distance(this.path.x[0], 
-                                                this.path.y[0], 
-                                                this.path.x[1], 
-                                                this.path.y[1]) / this.waves[this.wave.index].speed);
+        enemy.path.shift();
 
-      // Add first tween
-      twns.push(this.add.tween(enemy).to({ x: this.path.x[1], 
-                                           y: this.path.y[1] }, 
-                                           duration, 
-                                           Phaser.Easing.Linear.None, true));
+        // Calculate distance and direction to next node
+        enemy.distanceToNextNode = this.physics.arcade.distanceToXY(enemy, enemy.path[0].x, enemy.path[0].y);
+        enemy.directionToNextNode = { x: (enemy.path[0].x - enemy.x) / enemy.distanceToNextNode,
+                                      y: (enemy.path[0].y - enemy.y) / enemy.distanceToNextNode };
 
+        enemy.reduceLives = function() {
+          this.lives -= 1;
+        }.bind(this);
 
-      // Add rest of the tweens and chain them (if any)
-      for (var i = 2; i < this.path.x.length; i++) {
-        duration = 1000 * (this.math.distance(this.path.x[i-1], 
-                                              this.path.y[i-1], 
-                                              this.path.x[i], 
-                                              this.path.y[i]) / this.waves[this.wave.index].speed);
-
-        twns.push(this.add.tween(enemy).to({ x: this.path.x[i], 
-                                             y: this.path.y[i] }, 
-                                             duration, Phaser.Easing.Linear.None));
-
-        twns[twns.length - 2].chain(twns[twns.length - 1]);
-      }
-
-      // If last tween finishes, destroy enemy sprite and reduce lives
-      twns[twns.length - 1].onComplete.add(function() { 
-        enemy.destroy(); 
-        this.lives -= 1; 
+        enemy.move = function() {
+          var deltatime = this.game.time.now - this.lastMoved;
+          this.x += this.directionToNextNode.x * this.speed * deltatime/1000;
+          this.y += this.directionToNextNode.y * this.speed * deltatime/1000;
+          this.lastMoved = this.game.time.now;
+          if (this.game.physics.arcade.distanceToXY(this, this.startNode.x, this.startNode.y) >= this.distanceToNextNode) {
+            this.x = this.path[0].x;
+            this.y = this.path[0].y;
+            this.startNode = { x: this.path[0].x, y: this.path[0].y };
+            this.path.shift();
+            if (this.path.length === 0) {
+              this.reduceLives();
+              this.destroy();
+              return;
+            }
+            this.distanceToNextNode = this.game.physics.arcade.distanceToXY(this, this.path[0].x, this.path[0].y);
+            this.directionToNextNode = { x: (this.path[0].x - this.x) / this.distanceToNextNode,
+                                          y: (this.path[0].y - this.y) / this.distanceToNextNode };
+          }
+        };
       }, this);
 
-      // Add enemy to group
-      this.enemies.add(enemy);
+    },
 
+    spawnEnemy: function() {
+      // Find first "dead" enemy and revive it at start position
+      // Enemies are destroyed(removed from group) so actual dead enemies will not be revived
+      var enemy = this.enemies.getFirstDead();
+      enemy.reset(enemy.startNode.x, enemy.startNode.y, enemy.maxHealth);
+      enemy.lastMoved = this.time.now;
     },
 
     createTower: function() {
@@ -313,33 +396,44 @@ module.exports = function () {
         // Build a tower if possible
         if (this.cursor.tile.properties.buildable && this.currency >= 50) {
           var tower = this.add.sprite(this.cursor.x, this.cursor.y, 'tower');
-          this.cursor.tile.properties.buildable = false;
+
+          // Reduce currency
+          this.currency -= 50;
 
           // Set tower properties
           tower.range = 200;
+          tower.nextFire = 0;
+          tower.fireRate = 1000;
 
+          tower.target = null;
+
+          // Circle for displaying towers range
           tower.rangeCircle = this.add.graphics();
           tower.rangeCircle.lineStyle(2, 0x000000, 1);
           tower.rangeCircle.drawCircle(this.cursor.x + 16, this.cursor.y + 16, tower.range * 2);
+          tower.rangeCircle.visible = false;
 
+          // Add mouseover events for displaying rangeCircle
           tower.inputEnabled = true;
           tower.events.onInputOver.add(function() {this.rangeCircle.visible = true;}, tower);
           tower.events.onInputOut.add(function() {this.rangeCircle.visible = false;}, tower);
 
-          tower.target = null;
-
+          // Create a subgroup for projectiles of this tower
           tower.projectiles = this.add.group();
           tower.projectiles.enableBody = true;
           tower.projectiles.physicsBodyType = Phaser.Physics.ARCADE;
 
+          // Create 50 projectiles that will be revived when shooting
           tower.projectiles.createMultiple(50, 'projectile');
           tower.projectiles.setAll('checkWorldBounds', true);
           tower.projectiles.setAll('outOfBoundsKill', true);
+          tower.projectiles.setAll('damage', 20);
 
+          // Add reference to game object
           tower.game = this;
 
-          tower.nextFire = 0;
-          tower.fireRate = 1000;
+          // Add projectiles to main projectile group for collision checking
+          this.projectiles.add(tower.projectiles);
 
           tower.shoot = function() {
             if (this.target && this.game.time.now > this.nextFire) {
@@ -347,14 +441,10 @@ module.exports = function () {
               this.nextFire = this.game.time.now + this.fireRate;
 
               var projectile = this.projectiles.getFirstDead();
-              projectile.damage = 10;
               projectile.reset(this.x + 16, this.y + 16);
               this.game.physics.arcade.moveToObject(projectile, this.target, 800);
             }
           };
-
-          // Pay up
-          this.currency -= 50;
 
           // Give the tile a reference to the tower and add it to towers group
           this.cursor.tile.properties.tower = tower;
