@@ -13,7 +13,8 @@ module.exports = function () {
     waveTimer: {},
     waves: [],
     wave: {},
-    path: { x: [], y: [] },
+    path: [],
+    grid: [],
     lives: 10,
     currency: 400,
     cursor: {},
@@ -21,15 +22,16 @@ module.exports = function () {
     enemies: {},
     towers: {},
     projectiles: {},
+    route: {},
     px: 0,
     py: 0,
+    pathfinder: {},
 
     init: function() {
       // Initialize variables
       this.images = [];
       this.layers = [];
-      this.path.x = [];
-      this.path.y = [];
+      this.path = [];
       this.lives = 100;
       this.wave.index = 0;
       this.wave.number = 0;
@@ -41,6 +43,9 @@ module.exports = function () {
 
     preload: function() {
       this.data = require('../data/game.js')(this);
+
+      // Set advanced timing on
+      this.time.advancedTiming = true;
 
       // Load waves from data
       this.waves = this.data.waves;
@@ -88,8 +93,16 @@ module.exports = function () {
       this.layers.background = this.map.createLayer('Background');
       this.layers.background.resizeWorld();
 
+      // Set up pathfinder
+      this.pathfinder = new EasyStar.js();
+      this.updateGrid();
+      this.pathfinder.setAcceptableTiles([0]);
+      this.pathfinder.enableDiagonals();
+      this.pathfinder.disableCornerCutting();
+      this.pathfinder.enableSync();
+
       // Get path from object layer
-      this.calculateRoute();
+      this.calculatePath();
 
       // Create waveTimer
       this.waveTimer = this.time.create(false);
@@ -140,6 +153,7 @@ module.exports = function () {
     },
 
     update: function() {
+      this.game.debug.text("Fps: " + this.time.fps || '--', 1020, 30);
       this.game.debug.text("Money: " + this.currency, 20, 30);
       this.game.debug.text("Lives: " + this.lives, 20, 50);
       this.game.debug.text("Enemies: " + this.enemies.countLiving(), 20, 70);
@@ -183,7 +197,7 @@ module.exports = function () {
     updateEnemies: function() {
       this.enemies.forEach(function(enemy) {
         if (enemy.alive) {
-          enemy.move();
+          enemy.move(this);
         }
       },this);
     },
@@ -227,14 +241,17 @@ module.exports = function () {
         // Set tile x and y to cursor
         this.cursor.x = this.cursor.tile.x * 32;
         this.cursor.y = this.cursor.tile.y * 32;
-        if (this.buildMode) {
+
+        if (this.buildMode && this.cursor.tile != this.cursor.lastTile) {
           this.cursor.visible = true;
           // Tint the cursor green or red
-          if (this.cursor.tile.properties.buildable) {
+          if (this.cursor.tile.properties.buildable && !this.cursor.tile.hasEnemies && !this.cursor.tile.properties.tower && !this.isPathBlocked(this.cursor.tile.x, this.cursor.tile.y)) {
             this.cursor.tint = 0x00FF00;
           } else {
             this.cursor.tint = 0xFF0000;
           }
+          // Only do tinting on new tiles
+          this.cursor.lastTile = this.cursor.tile;
         } 
       } else {
         // Hide cursor when not over game area
@@ -242,18 +259,11 @@ module.exports = function () {
       }
     },
 
-    calculateRoute: function() {
+    calculatePath: function() {
+      this.updateGrid();
 
-      var easystar = new EasyStar.js();
-
-      var points = this.updateGrid();
-
-      easystar.setGrid(this.grid);
-      easystar.setAcceptableTiles([0]);
-      easystar.enableDiagonals();
-      easystar.disableCornerCutting();
-
-      easystar.findPath(points[0][0], points[0][1], points[1][0], points[1][1], function( path ) {
+      this.pathfinder.findPath(this.route.start.x, this.route.start.y, 
+                               this.route.end.x, this.route.end.y, function( path ) {
         if (path === null) {
           console.log("Path was not found.");
         }
@@ -265,46 +275,46 @@ module.exports = function () {
         this.path = path;
       }.bind(this));
 
-      easystar.calculate();
+      this.pathfinder.calculate();
     },
 
     updateGrid: function(){
       var map = this.map.layers[0].data;
       var grid = [];
-      var start = [];
-      var end = [];
 
       // Convert map
       for (var i = 0;i < map.length;i++) {
         grid[i] = [];
         for (var j = 0;j < map[i].length;j++) {
-          if (map[i][j].properties.buildable) {
+          if (map[i][j].properties.tower) {
             grid[i].push(1);            
           } else {
             if (map[i][j].properties.start) {
-              start = [j,i];
+              this.route.start = {x: j, y: i};
+            } else if (map[i][j].properties.point) {
+              // The order of turning points will be marked with numbers in the
+              // map file so I can use that as an index to get correct order.
+              this.route.points[map[i][j].properties.point] = {x: j, y: i};
             } else if (map[i][j].properties.end) {
-              end = [j,i];
+              this.route.end = {x: j, y: i};
             }
             grid[i].push(0);
           }
         }
       }
 
-      this.grid = grid;
-
-      return [start, end];
+      this.pathfinder.setGrid(grid);
     },
 
     onEnemyHit: function(projectile, enemy) {
       enemy.health -= projectile.damage;
-      enemy.speed *= 0.9;
 
       projectile.kill();
 
       // Remove dead enemies
       if (enemy.health <= 0) {
         this.tweens.removeFrom(enemy);
+        enemy.destinationTile.hasEnemies = false;
         enemy.destroy();
         this.currency += 20;
       }
@@ -354,11 +364,35 @@ module.exports = function () {
         enemy.directionToNextNode = { x: (enemy.path[0].x - enemy.x) / enemy.distanceToNextNode,
                                       y: (enemy.path[0].y - enemy.y) / enemy.distanceToNextNode };
 
+        enemy.calculatePath = function(game) {
+          game.pathfinder.findPath(Math.floor(this.x/32), Math.floor(this.y/32), 
+                                   Math.floor(game.route.end.x), 
+                                   Math.floor(game.route.end.y), 
+          function( path ) {
+            if (path === null) {
+              console.log("Path was not found.");
+            }
+            // Convert points to coordinates
+            for (var i = 0; i < path.length; i++) {
+              path[i].x = (path[i].x*32) + 16;
+              path[i].y = (path[i].y*32) + 16;
+            }
+            this.path = path;
+          }.bind(this));
+
+          game.pathfinder.calculate();
+        };
+
         enemy.reduceLives = function() {
           this.lives -= 1;
         }.bind(this);
 
-        enemy.move = function() {
+        enemy.move = function(game) {
+          // Set a flag on destination tile so towers cannot be built in it
+          this.destinationTile = game.map.getTile(game.layers.background.getTileX(this.path[0].x),
+                                                  game.layers.background.getTileY(this.path[0].y));
+          this.destinationTile.hasEnemies = true;
+
           var deltatime = this.game.time.now - this.lastMoved;
           this.x += this.directionToNextNode.x * this.speed * deltatime/1000;
           this.y += this.directionToNextNode.y * this.speed * deltatime/1000;
@@ -367,12 +401,26 @@ module.exports = function () {
             this.x = this.path[0].x;
             this.y = this.path[0].y;
             this.startNode = { x: this.path[0].x, y: this.path[0].y };
+
+            // Set flag to false so towers can be built again on it
+            this.destinationTile.hasEnemies = false;
+
+            // Update path if necessary
+            if (this.updatePath) {
+              this.calculatePath(game);
+              this.updatePath = false;
+            }
+
+            // Move to next tile
             this.path.shift();
+
+            // If no more tiles left, the enemy has reached end
             if (this.path.length === 0) {
               this.reduceLives();
               this.destroy();
               return;
             }
+
             this.distanceToNextNode = this.game.physics.arcade.distanceToXY(this, this.path[0].x, this.path[0].y);
             this.directionToNextNode = { x: (this.path[0].x - this.x) / this.distanceToNextNode,
                                           y: (this.path[0].y - this.y) / this.distanceToNextNode };
@@ -394,7 +442,11 @@ module.exports = function () {
       // Check if trying to build on a tile
       if (this.cursor.tile && this.buildMode) {
         // Build a tower if possible
-        if (this.cursor.tile.properties.buildable && this.currency >= 50) {
+        if (this.cursor.tile.properties.buildable && this.currency >= 50 && !this.cursor.tile.hasEnemies && !this.cursor.tile.properties.tower) {
+          if (this.isPathBlocked(this.cursor.tile.x, this.cursor.tile.y)) {
+            return;
+          }
+
           var tower = this.add.sprite(this.cursor.x, this.cursor.y, 'tower');
 
           // Reduce currency
@@ -449,8 +501,35 @@ module.exports = function () {
           // Give the tile a reference to the tower and add it to towers group
           this.cursor.tile.properties.tower = tower;
           this.towers.add(tower);
+
+          // Update grid
+          this.updateGrid();
+          this.calculatePath();
+
+          this.enemies.forEach(function(enemy) {
+            enemy.updatePath = true;
+          });
+
         }
       }
+    },
+
+    isPathBlocked: function(x, y) {
+      var isBlocked = false;
+
+      // Check if building a tower blocks the path
+      this.pathfinder.avoidAdditionalPoint(x, y);
+      this.pathfinder.findPath(this.route.start.x, this.route.start.y, 
+                               this.route.end.x, this.route.end.y, function( path ) {
+        if (path === null) {
+          isBlocked = true;
+        }
+      }.bind(isBlocked));
+
+      this.pathfinder.calculate();
+      this.pathfinder.stopAvoidingAdditionalPoint(x, y);
+
+      return isBlocked;
     }
 
   };

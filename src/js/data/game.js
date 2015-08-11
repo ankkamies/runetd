@@ -53,42 +53,63 @@ module.exports = function(game) {
     waves: [
     {
       count: 10,
-      health: 100,
+      health: 60,
       speed: 100,
-      delay: 2000,
+      delay: 1000,
       spawnDelay: 500
     },
     {
       count: 15,
-      health: 150,
-      speed: 150,
+      health: 120,
+      speed: 100,
       delay: 2000,
       spawnDelay: 400
     },
     {
       count: 20,
-      health: 250,
+      health: 150,
       speed: 150,
       delay: 2000,
       spawnDelay: 350
     },
     {
       count: 20,
-      health: 250,
+      health: 200,
       speed: 200,
       delay: 2000,
       spawnDelay: 350
     },
     {
-      count: 99,
-      health: 100,
+      count: 20,
+      health: 250,
       speed: 100,
       delay: 2000,
       spawnDelay: 400
     },
     {
-      count: 1,
+      count: 25,
+      health: 250,
+      speed: 300,
+      delay: 2000,
+      spawnDelay: 800
+    },
+    {
+      count: 30,
+      health: 300,
+      speed: 250,
+      delay: 2000,
+      spawnDelay: 500
+    },
+    {
+      count: 5,
       health: 1000,
+      speed: 150,
+      delay: 2000,
+      spawnDelay: 1500
+    },
+    {
+      count: 1,
+      health: 20000,
       speed: 100,
       delay: 2000,
       spawnDelay: 100
