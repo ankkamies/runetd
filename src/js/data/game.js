@@ -14,7 +14,7 @@ module.exports = function(game) {
       },
       pos: { 
         x: 1040, 
-        y: 670 
+        y: 590 
       },
       actionOnClick: function() {
         game.state.start('stages');

@@ -507,7 +507,10 @@ module.exports = function () {
           this.calculatePath();
 
           this.enemies.forEach(function(enemy) {
-            enemy.updatePath = true;
+            // Only calculate path for alive enemies
+            if (enemy.alive) {
+              enemy.updatePath = true;              
+            }
           });
 
         }

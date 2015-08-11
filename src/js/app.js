@@ -2,7 +2,7 @@
 
 var Phaser = require('phaser');
 
-var game = new Phaser.Game(1140, 720, Phaser.AUTO);
+var game = new Phaser.Game(1140, 640, Phaser.AUTO);
 
 // Initialize menu data
 var menu = {

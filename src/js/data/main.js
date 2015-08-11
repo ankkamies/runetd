@@ -57,7 +57,7 @@ module.exports = function(game) {
       },
       pos: { 
         x: 0, 
-        y: 670 
+        y: 590 
       },
       actionOnClick: function() {
         game.state.start('intro');
