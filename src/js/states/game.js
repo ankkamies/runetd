@@ -430,6 +430,8 @@ module.exports = function () {
 
           // Set selected tower to null
           this.selectedTower = null;
+
+          this.updateGrid();
         }
       }
     },
