@@ -19,28 +19,6 @@ module.exports = function(game) {
       actionOnClick: function() {
         game.state.start('stages');
       }
-    },
-    { 
-      id: 'btn_buildmode',
-      spritesheet: 'assets/ui/buttons/btn_buildmode.png',
-      frames: [null, null],
-      size: { 
-        x: 100, 
-        y: 50 
-      },
-      pos: { 
-        x: 1040, 
-        y: 200 
-      },
-      actionOnClick: function() {
-        game.buildMode = !game.buildMode;
-        // Change build mode button frame to match build state
-        if (game.buildMode) {
-          this.frame = 1;
-        } else {
-          this.frame = 0;
-        }
-      }
     }],
 
     images: [],
@@ -50,68 +28,100 @@ module.exports = function(game) {
 
     }],
 
+    towerFrame: {
+      id: 'img_towerframe',
+      spritesheet: 'assets/ui/images/img_towerframe.png',
+      frames: [null, null],
+      size: { 
+        x: 50, 
+        y: 50 
+      },
+      pos: { 
+        x: 970,
+        y: 100 
+      },
+      actionOnClick: function() {
+        if (game.buildPhase) {
+          if (game.selectedTower === this.tower) {
+            game.selectedTower = null;
+          } else {
+            game.selectedTower = this.tower;
+          }
+        }
+      }
+    },
+
     waves: [
     {
       count: 10,
-      health: 60,
+      maxHealth: 120,
       speed: 100,
-      delay: 1000,
-      spawnDelay: 500
+      value: 2,
+      delay: 25000,
+      spawnDelay: 1000
     },
     {
       count: 15,
-      health: 120,
+      maxHealth: 150,
       speed: 100,
-      delay: 2000,
+      value: 3,
+      delay: 10000,
       spawnDelay: 400
     },
     {
       count: 20,
-      health: 150,
+      maxHealth: 180,
       speed: 150,
-      delay: 2000,
+      value: 3,
+      delay: 10000,
       spawnDelay: 350
     },
     {
       count: 20,
-      health: 200,
+      maxHealth: 200,
       speed: 200,
-      delay: 2000,
+      value: 3,
+      delay: 10000,
       spawnDelay: 350
     },
     {
       count: 20,
-      health: 250,
+      maxHealth: 250,
       speed: 100,
-      delay: 2000,
+      value: 3,
+      delay: 10000,
       spawnDelay: 400
     },
     {
       count: 25,
-      health: 250,
+      maxHealth: 250,
       speed: 300,
-      delay: 2000,
+      value: 2,
+      delay: 10000,
       spawnDelay: 800
     },
     {
       count: 30,
-      health: 300,
+      maxHealth: 300,
       speed: 250,
-      delay: 2000,
+      value: 2,
+      delay: 10000,
       spawnDelay: 500
     },
     {
       count: 5,
-      health: 1000,
+      maxHealth: 1000,
       speed: 150,
-      delay: 2000,
+      value: 20,
+      delay: 10000,
       spawnDelay: 1500
     },
     {
       count: 1,
-      health: 20000,
+      maxHealth: 15000,
       speed: 100,
-      delay: 2000,
+      value: 100,
+      delay: 15000,
       spawnDelay: 100
     }]
   };
