@@ -140,12 +140,12 @@ module.exports = function () {
       this.waveTimer = this.time.create(false);
 
       // Create groups for enemies, towers and projectiles
+      // Order is important, since it affects draw order
+      this.towers = this.add.group();
+      this.projectiles = this.add.group();
       this.enemies = this.add.group();
       this.enemies.enableBody = true;
       this.enemies.physicsBodyType = Phaser.Physics.ARCADE;
-
-      this.towers = this.add.group();
-      this.projectiles = this.add.group();
 
       // Create buttons from data
       for (var i = 0; i < this.data.buttons.length; i++) {

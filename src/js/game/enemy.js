@@ -16,6 +16,11 @@ function Enemy (game, x, y, type) {
   this.health = this.maxHealth;
   this.path = this.game.path.slice();
 
+  // Initialize health bar
+  this.healthbar = this.addChild(this.game.make.graphics(0, 0));
+  this.healthbar.anchor = {x: 0.5, y: 0.5};
+  this.bringToTop();
+
   // Set health and speed with current wave data
   this.maxSpeed = this.game.wave.data.speed;
   this.speed = this.maxSpeed;
@@ -42,7 +47,22 @@ Enemy.prototype.constructor = Enemy;
 Enemy.prototype.update = function() {
   if (this.alive) {
     this.move();
+
+    // Draw healthbar
+    this.healthbar.clear();
+    var x = (this.health / this.maxHealth) * 100;
+    var colour = this.rgbToHex((x > 50 ? 1-2*(x-50)/100.0 : 1.0) * 255, (x > 50 ? 1.0 :2*x/100.0) * 255, 0);
+    this.healthbar.angle = -this.angle;
+    this.healthbar.beginFill(colour);
+    this.healthbar.lineStyle(5, colour, 1);
+    this.healthbar.moveTo(-16, -25);
+    this.healthbar.lineTo(32 * this.health / this.maxHealth - 16, -25);
+    this.healthbar.endFill();
   }
+};
+
+Enemy.prototype.rgbToHex = function (r, g, b) {
+  return "0x" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 };
 
 Enemy.prototype.setPath = function(path) {
