@@ -25,6 +25,8 @@ module.exports = [
       // Reset damage
       this.damage = this.baseDamage;
       this.attackSpeed = this.baseAttackSpeed;
+    },
+    applyAura: function() {
     }
   },
   {
@@ -32,12 +34,13 @@ module.exports = [
     type: 1,
     name: 'Defensive Tower',
     range: 100,
-    attackSpeed: 1000,
-    damage: [30, 40],
+    attackSpeed: null,
+    damage: null,
     cost: 40,
     projectileType: 0,
     spritesheet: 'assets/game/towers/twr_defensive.png',
-    action: function() {
+    action: function() {},
+    applyAura: function() {
       this.game.enemies.forEach(function (enemy) {
         if (this.game.physics.arcade.distanceBetween(this, enemy) < this.range) {
           enemy.speed *= 0.8;
@@ -50,15 +53,18 @@ module.exports = [
     type: 2,
     name: 'Support Tower',
     range: 75,
-    attackSpeed: 1000,
-    damage: [30, 40],
+    attackSpeed: null,
+    damage: null,
     cost: 60,
     projectileType: 0,
     spritesheet: 'assets/game/towers/twr_support.png',
-    action: function() {
+    action: function() {},
+    applyAura: function() {
       this.game.towers.forEach(function (tower) {
-        if (this.game.physics.arcade.distanceBetween(this, tower) < this.range) {
-          tower.attackSpeed *= 0.8;
+        if (tower.attackSpeed !== null) {
+          if (this.game.physics.arcade.distanceBetween(this, tower) < this.range) {
+            tower.attackSpeed *= 0.8;
+          }
         }
       }, this);
     }

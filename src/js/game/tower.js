@@ -14,11 +14,13 @@ function Tower (game, x, y, type) {
   this.range = data[type].range;
   this.baseAttackSpeed = data[type].attackSpeed;
   this.action = data[type].action;
+  this.applyAura = data[type].applyAura;
   this.baseDamage = data[type].damage;
   this.damage = this.baseDamage;
   this.attackSpeed = this.baseAttackSpeed;
   this.projectileType = data[type].projectileType;
   this.value = data[type].cost;
+  this.name = data[type].name;
 
   // Initialize values
   this.target = null;
@@ -51,6 +53,10 @@ Tower.DATA = data;
 
 Tower.prototype = Object.create(Phaser.Sprite.prototype);
 Tower.prototype.constructor = Tower;
+
+Tower.prototype.preUpdate = function() {
+  this.applyAura();
+};
 
 Tower.prototype.update = function() {
   // Check if current target is out of range or dead

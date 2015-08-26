@@ -19,6 +19,27 @@ module.exports = function(game) {
       actionOnClick: function() {
         game.state.start('stages');
       }
+    },
+    {
+      id: 'btn_startnextwave',
+      spritesheet: 'assets/ui/buttons/btn_placeholder.png',
+      frames: [0, 1, 2, 3],
+      size: {
+        x: 100,
+        y: 50
+      },
+      pos: {
+        x: 970,
+        y: 30
+      },
+      actionOnClick: function() {
+        // Button works only when timer is running
+        if (game.waveTimer.running) {
+          // Remove event from waveTimer and start wave manually
+          game.waveTimer.stop(true);
+          game.startNextWave();
+        }
+      }
     }],
 
     images: [],
@@ -57,7 +78,7 @@ module.exports = function(game) {
       maxHealth: 120,
       speed: 100,
       value: 2,
-      delay: 25000,
+      delay: 40000,
       spawnDelay: 1000
     },
     {
@@ -65,7 +86,7 @@ module.exports = function(game) {
       maxHealth: 150,
       speed: 100,
       value: 3,
-      delay: 10000,
+      delay: 40000,
       spawnDelay: 400
     },
     {
@@ -73,7 +94,7 @@ module.exports = function(game) {
       maxHealth: 180,
       speed: 150,
       value: 3,
-      delay: 10000,
+      delay: 40000,
       spawnDelay: 350
     },
     {
@@ -81,7 +102,7 @@ module.exports = function(game) {
       maxHealth: 200,
       speed: 200,
       value: 3,
-      delay: 10000,
+      delay: 40000,
       spawnDelay: 350
     },
     {
@@ -89,7 +110,7 @@ module.exports = function(game) {
       maxHealth: 250,
       speed: 100,
       value: 3,
-      delay: 10000,
+      delay: 40000,
       spawnDelay: 400
     },
     {
@@ -97,7 +118,7 @@ module.exports = function(game) {
       maxHealth: 250,
       speed: 300,
       value: 2,
-      delay: 10000,
+      delay: 40000,
       spawnDelay: 800
     },
     {
@@ -105,7 +126,7 @@ module.exports = function(game) {
       maxHealth: 300,
       speed: 250,
       value: 2,
-      delay: 10000,
+      delay: 40000,
       spawnDelay: 500
     },
     {
@@ -113,15 +134,15 @@ module.exports = function(game) {
       maxHealth: 1000,
       speed: 150,
       value: 20,
-      delay: 10000,
+      delay: 40000,
       spawnDelay: 1500
     },
     {
       count: 1,
-      maxHealth: 15000,
+      maxHealth: 10000,
       speed: 100,
       value: 100,
-      delay: 15000,
+      delay: 40000,
       spawnDelay: 100
     }]
   };

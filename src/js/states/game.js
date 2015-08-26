@@ -6,6 +6,7 @@ var EasyStar = require('easystarjs');
 var Tower = require('../game/tower.js');
 var Enemy = require('../game/enemy.js');
 var Projectile = require('../game/projectile.js');
+var UI = require('../game/ui.js');
 
 module.exports = function () {
   return {
@@ -33,6 +34,7 @@ module.exports = function () {
     selectedTower: 0,
     buildButtons: [],
     towerImages: [],
+    ui: {},
 
     init: function() {
       // Initialize variables
@@ -48,6 +50,7 @@ module.exports = function () {
       this.currency = 300;
       this.buildPhase = true;
       this.selectedTower = null;
+      this.ui = {};
     },
 
     preload: function() {
@@ -130,6 +133,9 @@ module.exports = function () {
       // Get path from object layer
       this.calculatePath();
 
+      // Create UI
+      this.ui = new UI(this);
+
       // Create waveTimer
       this.waveTimer = this.time.create(false);
 
@@ -193,7 +199,7 @@ module.exports = function () {
     },
 
     update: function() {
-      this.game.debug.text("Fps: " + this.time.fps || '--', 1020, 30);
+      this.game.debug.text("Fps: " + this.time.fps || '--', 1000, 20);
       this.game.debug.text("Money: " + this.currency, 20, 30);
       this.game.debug.text("Lives: " + this.lives, 20, 50);
       this.game.debug.text("Enemies: " + this.enemies.countLiving(), 20, 70);
@@ -225,7 +231,8 @@ module.exports = function () {
         this.buildPhase = true;
         // If there are waves left, start next one, else end game
         if (this.wave.index < this.waves.length) {
-          this.waveTimer.add(this.waves[this.wave.index].delay, this.startNextWave, this);          
+          this.waveTimer.add(this.waves[this.wave.index].delay, this.startNextWave, this);
+          this.waveTimer.start();
         } else {
           console.log('You won!');
           this.state.start('stages');
@@ -242,42 +249,45 @@ module.exports = function () {
           this.buildButtons[i].frame = 0;
         }
       }
+
+      this.ui.update();
     },
 
     updateCursor: function() {
-      // Get tile from game area
-      this.cursor.tile = this.map.getTile(this.layers.background.getTileX(this.input.activePointer.worldX),
+      // get tile from game area
+      this.cursor.tile =
+      this.map.getTile(this.layers.background.getTileX(this.input.activePointer.worldX),
                                           this.layers.background.getTileY(this.input.activePointer.worldY));
 
-      // Update cursor position if tile was found
+      // update cursor position if tile was found
       if (this.cursor.tile !== null) {
-        // Set tile x and y to cursor
+        // set tile x and y to cursor
         this.cursor.x = this.cursor.tile.x * 32;
         this.cursor.y = this.cursor.tile.y * 32;
 
         if (this.buildPhase && this.selectedTower !== null) {
           this.cursor.visible = true;
-          // Tint the cursor green or red
+          // tint the cursor green or red
           if (this.cursor.tile.properties.buildable && !this.cursor.tile.hasEnemies && !this.cursor.tile.tower) {
-            this.cursor.tint = 0x00FF00;
+            this.cursor.tint = 0x00ff00;
           } else {
-            this.cursor.tint = 0xFF0000;
+            this.cursor.tint = 0xff0000;
           }
           if (this.cursor.tile.properties.blocksPath) {
-            this.cursor.tint = 0xFF0000;
+            this.cursor.tint = 0xff0000;
           } else if (this.cursor.tile !== this.cursor.lastTile) {
             if (this.isPathBlocked(this.cursor.tile.x, this.cursor.tile.y)) {
-              this.cursor.tint = 0xFF0000;
+              this.cursor.tint = 0xff0000;
               this.cursor.tile.properties.blocksPath = true;
             }
           }
           this.cursor.lastTile = this.cursor.tile;
         } else {
-          // Hide cursor if not building
+          // hide cursor if not building
           this.cursor.visible = false;
         }
       } else {
-        // Hide cursor when not over game area
+        // hide cursor when not over game area
         this.cursor.visible = false;
       }
     },
