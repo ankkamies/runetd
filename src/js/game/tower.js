@@ -11,16 +11,17 @@ function Tower (game, x, y, type) {
   Phaser.Sprite.call(this, game, x, y, data[type].id);
 
   // Set tower properties
-  this.range = data[type].range;
+  this.baseRange = data[type].range;
   this.baseAttackSpeed = data[type].attackSpeed;
   this.action = data[type].action;
   this.applyAura = data[type].applyAura;
   this.baseDamage = data[type].damage;
   this.damage = this.baseDamage;
   this.attackSpeed = this.baseAttackSpeed;
+  this.range = this.baseRange;
   this.projectileType = data[type].projectileType;
   this.value = data[type].cost;
-  this.name = data[type].name;
+  this.name = data[type].name; 
 
   // Initialize values
   this.target = null;
@@ -55,10 +56,15 @@ Tower.prototype = Object.create(Phaser.Sprite.prototype);
 Tower.prototype.constructor = Tower;
 
 Tower.prototype.preUpdate = function() {
-  this.applyAura();
+  // Reset stats before every update to prevent auras from stacking
+  this.damage = this.baseDamage;
+  this.range = this.baseRange;
+  this.attackSpeed = this.baseAttackSpeed;
 };
 
 Tower.prototype.update = function() {
+  // Apply auras or shoot, depending if the tower can have a target
+  this.applyAura();
   // Check if current target is out of range or dead
   if (this.target) {
     if (this.game.math.distance(this.x, this.y, this.target.x, this.target.y) > this.range || !this.target.alive) {
@@ -77,8 +83,10 @@ Tower.prototype.update = function() {
       }
     }
   }
+};
 
-  // Perform the action assigned to this tower
+Tower.prototype.postUpdate = function() {
+  // Shoot after everything has been updated so auras get applied
   this.action();
 };
 

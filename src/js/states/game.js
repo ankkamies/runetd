@@ -160,12 +160,13 @@ module.exports = function () {
       }
 
       // Create images from data
+      /* TODO: Move UI images to somewhere else so this can be used to create only game related images
       for (i = 0; i < this.data.images.length; i++) {
         this.images[this.data.images[i].id] = this.add.sprite(this.data.images[i].pos.x, 
                                                               this.data.images[i].pos.y, 
                                                               this.data.images[i].id);
       }
-
+      */
       // Create tower buttons from tower data
       for (i = 0; i < Tower.DATA.length; i++) {
         this.buildButtons[i] = this.add.button(this.data.towerFrame.pos.x + 55 * i,
@@ -174,6 +175,8 @@ module.exports = function () {
                                                this.data.towerFrame.actionOnClick, null);
 
         this.buildButtons[i].tower = Tower.DATA[i];
+        this.buildButtons[i].events.onInputOver.add(this.createCallback(Tower.DATA[i]), this);
+        this.buildButtons[i].events.onInputOut.add(this.ui.clearStatusText, this.ui);
 
         this.towerImages[i] = this.add.sprite(this.data.towerFrame.pos.x + 55 * i + 9,
                                               this.data.towerFrame.pos.y + 9,
@@ -239,6 +242,12 @@ module.exports = function () {
         }
       }
 
+    },
+
+    createCallback: function(entity) {
+      return function() {
+        this.ui.setStatusText(entity);
+      };
     },
 
     updateUI: function() {
@@ -392,6 +401,10 @@ module.exports = function () {
         var enemy = new Enemy(this, this.path[0].x, this.path[0].y, 0);
         enemy.anchor.set(0.5, 0.5);
 
+        enemy.inputEnabled = true;
+        enemy.events.onInputOver.add(this.createCallback(enemy), this);
+        enemy.events.onInputOut.add(this.ui.clearStatusText, this.ui);
+
         // Add created enemy to game
         this.add.existing(enemy);
 
@@ -434,6 +447,10 @@ module.exports = function () {
 
           // Give the tile a reference to the tower
           this.cursor.tile.tower = tower;
+
+          tower.inputEnabled = true;
+          tower.events.onInputOver.add(this.createCallback(tower), this);
+          tower.events.onInputOut.add(this.ui.clearStatusText, this.ui);
 
           // Add tower to towers group
           this.towers.add(tower);

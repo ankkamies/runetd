@@ -16,6 +16,9 @@ function Enemy (game, x, y, type) {
   this.health = this.maxHealth;
   this.path = this.game.path.slice();
 
+  // Set enemy properties from data
+  this.name = data[type].name;
+
   // Initialize health bar
   this.healthbar = this.addChild(this.game.make.graphics(0, 0));
   this.healthbar.anchor = {x: 0.5, y: 0.5};

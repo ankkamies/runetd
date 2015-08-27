@@ -42,7 +42,19 @@ module.exports = function(game) {
       }
     }],
 
-    images: [],
+    images: [{
+      id: 'img_invslot',
+      spritesheet: 'assets/ui/images/img_invslot.png',
+      size: {
+        x: 40,
+        y: 40
+      },
+      pos: {
+        x: null,
+        y: null
+      },
+      frames: 1
+    }],
 
     text: [
     {

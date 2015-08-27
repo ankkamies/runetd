@@ -22,9 +22,6 @@ module.exports = [
         projectile.reset(this.x, this.y);
         this.game.physics.arcade.moveToObject(projectile, this.target, 800);
       }
-      // Reset damage
-      this.damage = this.baseDamage;
-      this.attackSpeed = this.baseAttackSpeed;
     },
     applyAura: function() {
     }
