@@ -15,11 +15,12 @@ module.exports = function(game) {
         y: 300 
       },
       actionOnClick: function() {
+        // game.state.start('game', true, true, this.stage);
         game.state.start('game');
       }
     },
     { 
-     id: 'btn_return',
+      id: 'btn_return',
       spritesheet: 'assets/ui/buttons/btn_placeholder.png',
       size: { 
         x: 100, 
@@ -33,6 +34,15 @@ module.exports = function(game) {
         game.state.start('main');
       }
     }],
+
+    stageButton: {
+      id: 'btn_stageselect',
+      spritesheet: 'assets/ui/buttons/btn_placeholder.png',
+      size: {
+        x: 100,
+        y: 50
+      }
+    },
 
     images: [
     {

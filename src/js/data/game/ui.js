@@ -74,11 +74,11 @@ module.exports = function(game) {
         y: 100 
       },
       actionOnClick: function() {
-        if (game.buildPhase) {
-          if (game.selectedTower === this.tower) {
-            game.selectedTower = null;
+        if (game.buildPhase && game.currency >= this.tower.cost) {
+          if (game.buildTower === this.tower) {
+            game.buildTower = null;
           } else {
-            game.selectedTower = this.tower;
+            game.buildTower = this.tower;
           }
         }
       }

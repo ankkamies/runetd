@@ -74,7 +74,7 @@ UI.prototype.create = function() {
                                            this.data.towerFrame.actionOnClick, null);
 
     this.buildButtons[i].tower = Tower.DATA[i];
-    this.buildButtons[i].events.onInputOver.add(this.game.createCallback(Tower.DATA[i]), this);
+    this.buildButtons[i].events.onInputOver.add(this.game.createCallback(Tower.DATA[i]), this.game);
     this.buildButtons[i].events.onInputOut.add(this.clearStatusText, this);
 
     this.towerImages[i] = this.game.add.sprite(this.data.towerFrame.pos.x + 55 * i + 9,
@@ -108,7 +108,6 @@ UI.prototype.create = function() {
 
 UI.prototype.update = function() {
   this.updateCursor();
-  this.updateStatusText();
   this.updateBuildButtons();
 };
 
@@ -142,23 +141,9 @@ UI.prototype.clearStatusText = function() {
   this.stats.text = '';
 };
 
-UI.prototype.updateStatusText = function() {
-  // Update stats text if mouse is over a tower
-
-/*
-if (this.game.cursor.tile !== null) {
-    if (this.game.cursor.tile.tower) {
-      this.setStatusText(this.game.cursor.tile.tower);
-    } else {
-      // this.stats.text = '';
-    }
-  }
-*/
-};
-
 UI.prototype.updateBuildButtons = function() {
   for (var i = 0; i < this.buildButtons.length; i++) {
-    if (this.buildButtons[i].tower === this.game.selectedTower) {
+    if (this.buildButtons[i].tower === this.game.buildTower) {
       this.buildButtons[i].frame = 1;
     } else {
       this.buildButtons[i].frame = 0;
@@ -177,7 +162,7 @@ UI.prototype.updateCursor = function() {
     this.cursor.x = this.cursor.tile.x * 32;
     this.cursor.y = this.cursor.tile.y * 32;
 
-    if (this.game.buildPhase && this.game.selectedTower !== null) {
+    if (this.game.buildPhase && this.game.buildTower !== null) {
       this.cursor.visible = true;
       // tint the cursor green or red
       if (this.cursor.tile.properties.buildable && !this.cursor.tile.hasEnemies && !this.cursor.tile.tower) {

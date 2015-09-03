@@ -30,10 +30,11 @@ module.exports = function () {
     px: 0,
     py: 0,
     pathfinder: {},
-    selectedTower: 0,
+    selectedTower: null,
     ui: {},
+    stage: {},
 
-    init: function() {
+    init: function(stage) {
       // Initialize variables
       this.images = [];
       this.layers = [];
@@ -46,25 +47,26 @@ module.exports = function () {
       this.wave.finished = false;
       this.currency = 300;
       this.buildPhase = true;
+      this.buildTower = null;
       this.selectedTower = null;
       this.ui = {};
+
+      this.stage = stage;
+      console.log(stage);
     },
 
     preload: function() {
-      this.data = require('../data/game.js')(this);
-
       // Preload UI
       this.ui = new UI(this);
 
       // Set advanced timing on
       this.time.advancedTiming = true;
 
-      // Load waves from data
-      this.waves = this.data.waves;
+      this.waves = this.stage.waves;
 
       // Preload tile data
-      this.load.tilemap('map', 'assets/game/maps/test.json', null, Phaser.Tilemap.TILED_JSON);
-      this.load.image('test', 'assets/game/tiles/test.png');
+      this.load.tilemap('tilemap', this.stage.map.tilemap, null, Phaser.Tilemap.TILED_JSON);
+      this.load.image('test', this.stage.map.tileset);
 
       // Preload Tower data
       for (var i = 0; i < Tower.DATA.length; i++) {
@@ -90,7 +92,7 @@ module.exports = function () {
       this.physics.startSystem(Phaser.Physics.ARCADE);
 
       // Add tilemap
-      this.map = this.add.tilemap('map');
+      this.map = this.add.tilemap('tilemap');
       this.map.addTilesetImage('test');
 
       // Create background layer
@@ -127,7 +129,7 @@ module.exports = function () {
       this.waveTimer.start();
 
       // Add input event to create tower when clicking
-      this.input.onDown.add(function(pointer, event) { 
+      this.input.onDown.add(function(pointer, event) {
         this.createTower(); 
       }, this);
     },
@@ -174,7 +176,28 @@ module.exports = function () {
 
     createCallback: function(entity) {
       return function() {
-        this.setStatusText(entity);
+        if (this.selectedTower) {
+          console.log(this.selectedTower.name);
+          this.ui.setStatusText(this.selectedTower);
+        } else {
+          this.ui.setStatusText(entity);
+        }
+      };
+    },
+
+    createTowerClickCallback: function(tower) {
+      return function() {
+        this.selectedTower = tower;
+      };
+    },
+
+    createEnemyClickCallback: function(enemy) {
+      return function() {
+        if (this.selectedTower) {
+          console.log('Targeting ' + enemy.name);
+          this.selectedTower.assignedTarget = enemy;
+        }
+        this.selectedEnemy = enemy;
       };
     },
 
@@ -248,7 +271,7 @@ module.exports = function () {
     startNextWave: function() {
       this.wave.number += 1;
       this.buildPhase = false;
-      this.selectedTower = null;
+      this.buildTower = null;
 
       // Update grid and calculate path
       this.updateGrid();
@@ -279,8 +302,9 @@ module.exports = function () {
         enemy.anchor.set(0.5, 0.5);
 
         enemy.inputEnabled = true;
-        enemy.events.onInputOver.add(this.createCallback(enemy), this.ui);
+        enemy.events.onInputOver.add(this.createCallback(enemy), this);
         enemy.events.onInputOut.add(this.ui.clearStatusText, this.ui);
+        enemy.events.onInputDown.add(this.createEnemyClickCallback(enemy), this);
 
         // Add created enemy to game
         this.add.existing(enemy);
@@ -304,14 +328,14 @@ module.exports = function () {
 
     createTower: function() {
       // Check if trying to build on a tile
-      if (this.ui.cursor.tile && this.buildPhase && this.selectedTower !== null) {
+      if (this.ui.cursor.tile && this.buildPhase && this.buildTower !== null) {
         // Build a tower if possible
-        if (this.ui.cursor.tile.properties.buildable && this.currency >= this.selectedTower.cost && 
+        if (this.ui.cursor.tile.properties.buildable && this.currency >= this.buildTower.cost && 
             !this.ui.cursor.tile.hasEnemies && !this.ui.cursor.tile.tower) {
           if (this.isPathBlocked(this.ui.cursor.tile.x, this.ui.cursor.tile.y)) {
             return;
           }
-          var tower = new Tower(this, this.ui.cursor.x, this.ui.cursor.y, this.selectedTower.type);
+          var tower = new Tower(this, this.ui.cursor.x, this.ui.cursor.y, this.buildTower.type);
           tower.anchor.setTo(0.5, 0.5);
 
           // Add sprite to game
@@ -327,14 +351,19 @@ module.exports = function () {
           this.ui.cursor.tile.tower = tower;
 
           tower.inputEnabled = true;
-          tower.events.onInputOver.add(this.createCallback(tower), this.ui);
+          tower.events.onInputOver.add(this.createCallback(tower), this);
           tower.events.onInputOut.add(this.ui.clearStatusText, this.ui);
+          tower.events.onInputDown.add(this.createTowerClickCallback(tower), this);
 
           // Add tower to towers group
           this.towers.add(tower);
 
-          // Set selected tower to null
-          this.selectedTower = null;
+          // If player is pressing shift, continue building
+          if (!this.game.input.keyboard.isDown(Phaser.Keyboard.SHIFT) || this.currency <
+            this.buildTower.cost) {
+            // Set selected tower to null
+            this.buildTower = null;
+          }
 
           this.updateGrid();
         }

@@ -1,5 +1,23 @@
 'use strict';
 
+/* Tower data
+Create new towers by adding them to this file
+
+Format:
+{
+  id: Tower ID,
+  type: Tower type,
+  name: Name of the tower,
+  range: Range of the tower,
+  attackSpeed: Attackspeed of the tower,
+  damage: [min, max] damage of the tower,
+  cost: Build cost of the tower,
+  projectileType: type of projectile used by tower,
+  spritesheet: path to spritesheet,
+  action: Custom action of the tower,
+  applyAura: Custom aura type action of the tower
+*/
+
 module.exports = [
   {
     id: 'twr_offensive',

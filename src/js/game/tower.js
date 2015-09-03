@@ -24,6 +24,7 @@ function Tower (game, x, y, type) {
   this.name = data[type].name; 
 
   // Initialize values
+  this.assignedTarget = null;
   this.target = null;
   this.nextFire = 0;
 
@@ -65,10 +66,15 @@ Tower.prototype.preUpdate = function() {
 Tower.prototype.update = function() {
   // Apply auras or shoot, depending if the tower can have a target
   this.applyAura();
+
+  if (this.assignedTarget) {
+    this.target = this.assignedTarget;
+  }
   // Check if current target is out of range or dead
   if (this.target) {
     if (this.game.math.distance(this.x, this.y, this.target.x, this.target.y) > this.range || !this.target.alive) {
       this.target = null;
+      this.assignedTarget = null;
     }
   } else {
     for(var i = 0; i < this.game.enemies.children.length; i++) {
