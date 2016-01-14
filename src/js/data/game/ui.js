@@ -54,6 +54,19 @@ module.exports = function(game) {
         y: null
       },
       frames: 1
+    },
+    {
+      id: 'img_socket',
+      spritesheet: 'assets/ui/images/img_socket.png',
+      size: {
+        x: 40,
+        y: 40
+      },
+      pos: {
+        x: null,
+        y: null
+      },
+      frames: 1
     }],
 
     text: [

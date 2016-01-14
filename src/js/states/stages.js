@@ -10,7 +10,6 @@ module.exports = function() {
     init: function() {
       this.data = require('../data/stages.js')(this);
       this.stages = require('../data/game/stages.js');
-      console.log(this.stages);
     },
 
     preload: function() {
@@ -49,16 +48,13 @@ module.exports = function() {
                                                                 this, 0, 1, 2, 3);
       }
 
-      console.log(this.stages);
-
       // Create stage buttons from data
       for (i = 0; i < this.stages.length; i++) {
-        this.stageButtons[i] = this.add.button(i * 50, (i % 4) * 20,
+        this.stageButtons[i] = this.add.button(450 + i * 130, 350,
                                                this.data.stageButton.id, 
                                                this.createCallback(this.stages[i]), 
                                                this, 0, 1, 2, 3);
 
-        console.log(this.stages[i]);
       }
 
       // Create images from data

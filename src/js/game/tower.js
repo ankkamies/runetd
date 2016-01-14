@@ -9,6 +9,7 @@ function Tower (game, x, y, type) {
   y += 16;
 
   Phaser.Sprite.call(this, game, x, y, data[type].id);
+  this.anchor.setTo(0.5, 0.5);
 
   // Set tower properties
   this.baseRange = data[type].range;
@@ -16,17 +17,32 @@ function Tower (game, x, y, type) {
   this.action = data[type].action;
   this.applyAura = data[type].applyAura;
   this.baseDamage = data[type].damage;
-  this.damage = this.baseDamage;
+
+  // Copy damage values from baseDamage so it does not use a reference
+  if (this.baseDamage !== null) {
+    this.damage[0] = this.baseDamage[0];
+    this.damage[1] = this.baseDamage[1];
+  } else {
+    this.damage = null;
+  }
+
   this.attackSpeed = this.baseAttackSpeed;
   this.range = this.baseRange;
   this.projectileType = data[type].projectileType;
   this.value = data[type].cost;
   this.name = data[type].name; 
+  this.type = type;
 
   // Initialize values
   this.assignedTarget = null;
   this.target = null;
   this.nextFire = 0;
+
+  // Create empty sockets
+  this.sockets = [];
+  for (var i = 0; i < data[type].sockets; i++) {
+    this.sockets.push(null);
+  }
 
   // Circle for displaying towers range
   this.rangeCircle = this.game.add.graphics();
@@ -58,7 +74,11 @@ Tower.prototype.constructor = Tower;
 
 Tower.prototype.preUpdate = function() {
   // Reset stats before every update to prevent auras from stacking
-  this.damage = this.baseDamage;
+  if (this.damage !== null) {
+    this.damage[0] = this.baseDamage[0];
+    this.damage[1] = this.baseDamage[1];
+  }
+
   this.range = this.baseRange;
   this.attackSpeed = this.baseAttackSpeed;
 };
@@ -94,6 +114,16 @@ Tower.prototype.update = function() {
 Tower.prototype.postUpdate = function() {
   // Shoot after everything has been updated so auras get applied
   this.action();
+};
+
+Tower.prototype.socketRune = function(rune) {
+  for (var i = 0; i < this.sockets.length; i++) {
+    if (this.sockets[i] === null) {
+      this.sockets[i] = rune;
+      return true;
+    }
+  }
+  return false;
 };
 
 module.exports = Tower;

@@ -10,6 +10,7 @@ function UI(game) {
   this.buildButtons = [];
   this.towerImages = [];
   this.cursor = {};
+  this.socketDisplay = [];
 
   // Preload button sprites from data
   for (var i = 0; i < this.data.buttons.length; i++) {
@@ -41,9 +42,11 @@ function UI(game) {
 UI.prototype.create = function() {
   // Define text style
   var style = {
-    font: '16px Arial',
+    font: '12px Arial',
     fill: '#ffffff',
-    align: 'left'
+    align: 'left',
+    wordWrap: true,
+    wordWrapWidth: 175
   };
 
   // Create buttons from data
@@ -94,16 +97,79 @@ UI.prototype.create = function() {
   this.stats = this.game.add.text(970, 160, '', style); 
 
   // Create inventory
+  this.createInventory();
+
+  this.createSocketDisplay();
+
+};
+
+UI.prototype.createInventory = function() {
   this.inventory = [];
 
-  for (i = 0; i < 4; i++) {
+  for (var i = 0; i < 4; i++) {
     this.inventory[i] = [];
     for(var j = 0; j < 6; j++) {
       this.inventory[i][j] = {};
-      this.inventory[i][j].sprite = this.game.add.sprite(967 + i * 42, 300 + j * 42, 'img_invslot');
+      this.inventory[i][j].item = null;
+      this.inventory[i][j].sprite = this.game.add.sprite(967 + i * 42, 330 + j * 42, 'img_invslot');
     }
   }
+};
 
+UI.prototype.createSocketDisplay = function(sockets) {
+  this.hideSockets();
+
+  var offset = 0;
+
+  switch(sockets) {
+    case 1: 
+      offset = 0;
+      break;
+    case 2: 
+      offset = 10;
+      break;
+    case 3: 
+      offset = 30;
+      break;
+    case 4: 
+      offset = 50;
+      break;
+    default: 
+      offset = 0;
+      break;
+  }
+
+  // Create sprites for 3 sockets
+  for (var i = 0; i < sockets; i++) {
+    this.socketDisplay[i] = {};
+    this.socketDisplay[i].rune = null;
+    this.socketDisplay[i].sprite = this.game.add.sprite((1017 - offset) + i * 42, 280, 'img_socket');
+    this.socketDisplay[i].sprite.visible = false;
+  }
+};
+
+UI.prototype.getOpenInventorySlot = function() {
+  for (var i = 0; i < 4; i++) {
+    for(var j = 0; j < 6; j++) {
+      if (this.inventory[i][j].item === null) {
+        return this.inventory[i][j];
+      }
+    }
+  }
+  // No empty slots found
+  return null;
+};
+
+UI.prototype.addItemToInventory = function(item) {
+  var inventorySlot = this.getOpenInventorySlot();
+  if (inventorySlot !== null) {
+    inventorySlot.item = item;
+    // Set item sprite position to inventorySlot
+    item.position.x = inventorySlot.sprite.position.x + 4;
+    item.position.y = inventorySlot.sprite.position.y + 4;
+  } else {
+    console.log('Inventory is full!');
+  }
 };
 
 UI.prototype.update = function() {
@@ -135,10 +201,58 @@ UI.prototype.setStatusText = function(entity) {
   if (entity.speed) {
     this.stats.text += 'Speed: ' + entity.speed + '\n';
   }
+  if (entity.runes) {
+    if (entity.runes.children.length > 0) {
+      this.stats.text += 'Runes: ';
+      entity.runes.forEach(function (rune) {
+        this.stats.text += rune.name + ' ';
+      }, this);
+      this.stats.text += '\n';
+    }
+  }
+  if (entity.sockets) {
+    this.showSockets(entity);
+  }
+
+  if (entity.supportEffect) {
+    this.stats.text += 'OFF: ' + entity.offensiveEffect.text + '\n';
+    this.stats.text += 'DEF: ' + entity.defensiveEffect.text + '\n';
+    this.stats.text += 'SUP: ' + entity.supportEffect.text + '\n';
+  }
+};
+
+UI.prototype.showSockets = function(entity) {
+  this.createSocketDisplay(entity.sockets.length);
+
+  for (var i = 0; i < entity.sockets.length; i++) {
+    if (entity.sockets[i] !== null) {
+      // Display rune if it exists
+      entity.sockets[i].position.x = this.socketDisplay[i].sprite.position.x + 4;
+      entity.sockets[i].position.y = this.socketDisplay[i].sprite.position.y + 4;
+      this.socketDisplay[i].rune = entity.sockets[i];
+      this.socketDisplay[i].rune.visible = true;
+      this.game.world.bringToTop(this.socketDisplay[i].rune);
+    }
+    // Display the socket frame
+    this.socketDisplay[i].sprite.visible = true;
+  }
+};
+
+UI.prototype.hideSockets = function() {
+  for (var i = 0; i < this.socketDisplay.length; i++) {
+    // Reset sockets
+    if (this.socketDisplay[i].rune !== null) {
+      this.socketDisplay[i].rune.visible = false;
+      this.socketDisplay[i].rune = null;
+    }
+    this.socketDisplay[i].sprite.visible = false;
+  }
+  this.socketDisplay = [];
 };
 
 UI.prototype.clearStatusText = function() {
   this.stats.text = '';
+  this.hideSockets();
 };
 
 UI.prototype.updateBuildButtons = function() {

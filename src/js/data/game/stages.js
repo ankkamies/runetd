@@ -84,7 +84,7 @@ module.exports = [
   },
   {
     map: {
-      tilemap: 'assets/game/maps/test.json',
+      tilemap: 'assets/game/maps/stage2.json',
       tileset: 'assets/game/tiles/test.png'
     },
     waves: [

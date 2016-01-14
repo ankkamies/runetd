@@ -4,22 +4,6 @@ module.exports = function(game) {
   return {
     buttons: [
     { 
-      id: 'btn_start',
-      spritesheet: 'assets/ui/buttons/btn_placeholder.png',
-      size: { 
-        x: 100, 
-        y: 50 
-      },
-      pos: { 
-        x: 520, 
-        y: 300 
-      },
-      actionOnClick: function() {
-        // game.state.start('game', true, true, this.stage);
-        game.state.start('game');
-      }
-    },
-    { 
       id: 'btn_return',
       spritesheet: 'assets/ui/buttons/btn_placeholder.png',
       size: { 

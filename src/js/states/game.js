@@ -5,6 +5,7 @@ var EasyStar = require('easystarjs');
 
 var Tower = require('../game/tower.js');
 var Enemy = require('../game/enemy.js');
+var Rune = require('../game/rune.js');
 var Projectile = require('../game/projectile.js');
 var UI = require('../game/ui.js');
 
@@ -31,6 +32,7 @@ module.exports = function () {
     py: 0,
     pathfinder: {},
     selectedTower: null,
+    selectedItem: null,
     ui: {},
     stage: {},
 
@@ -51,8 +53,7 @@ module.exports = function () {
       this.selectedTower = null;
       this.ui = {};
 
-      this.stage = stage;
-      console.log(stage);
+      this.selectedStage = stage;
     },
 
     preload: function() {
@@ -62,11 +63,11 @@ module.exports = function () {
       // Set advanced timing on
       this.time.advancedTiming = true;
 
-      this.waves = this.stage.waves;
+      this.waves = this.selectedStage.waves;
 
       // Preload tile data
-      this.load.tilemap('tilemap', this.stage.map.tilemap, null, Phaser.Tilemap.TILED_JSON);
-      this.load.image('test', this.stage.map.tileset);
+      this.load.tilemap('tilemap', this.selectedStage.map.tilemap, null, Phaser.Tilemap.TILED_JSON);
+      this.load.image('test', this.selectedStage.map.tileset);
 
       // Preload Tower data
       for (var i = 0; i < Tower.DATA.length; i++) {
@@ -76,6 +77,11 @@ module.exports = function () {
       // Preload Enemy data
       for (i = 0; i < Enemy.DATA.length; i++) {
         this.load.image(Enemy.DATA[i].id, Enemy.DATA[i].spritesheet);
+      }
+
+      // Preload Rune data
+      for (i = 0; i < Rune.DATA.length; i++) {
+        this.load.image(Rune.DATA[i].id, Rune.DATA[i].spritesheet);
       }
 
       // Preload Projectile data
@@ -132,6 +138,33 @@ module.exports = function () {
       this.input.onDown.add(function(pointer, event) {
         this.createTower(); 
       }, this);
+
+      // Create some runes
+      this.createRune(0);
+      this.createRune(1);
+      this.createRune(2);
+      this.createRune(3);
+      this.createRune(0);
+      this.createRune(1);
+      this.createRune(2);
+      this.createRune(3);
+      this.createRune(0);
+      this.createRune(1);
+      this.createRune(2);
+      this.createRune(3);
+
+    },
+
+    createRune: function(type) {
+      var rune = new Rune(this, 0, 0, type);
+      this.add.existing(rune);
+
+      rune.inputEnabled = true;
+      rune.events.onInputOver.add(this.createCallback(rune), this);
+      rune.events.onInputOut.add(this.ui.clearStatusText, this.ui);
+      rune.events.onInputDown.add(this.createItemClickCallback(rune), this);
+
+      this.ui.addItemToInventory(rune);
     },
 
     update: function() {
@@ -176,18 +209,19 @@ module.exports = function () {
 
     createCallback: function(entity) {
       return function() {
-        if (this.selectedTower) {
-          console.log(this.selectedTower.name);
-          this.ui.setStatusText(this.selectedTower);
-        } else {
-          this.ui.setStatusText(entity);
-        }
+        this.ui.setStatusText(entity);
       };
     },
 
     createTowerClickCallback: function(tower) {
       return function() {
-        this.selectedTower = tower;
+        if (this.selectedItem !== null) {
+          // TODO: Check if item is rune
+          tower.socketRune(this.selectedItem);
+          this.selectedItem = null;
+        } else {
+          this.selectedTower = tower;        
+        }
       };
     },
 
@@ -196,8 +230,16 @@ module.exports = function () {
         if (this.selectedTower) {
           console.log('Targeting ' + enemy.name);
           this.selectedTower.assignedTarget = enemy;
+        } else {
+          this.selectedEnemy = enemy;          
         }
-        this.selectedEnemy = enemy;
+      };
+    },
+
+    createItemClickCallback: function(item) {
+      return function() {
+        console.log('Selected ' + item.name);
+        this.selectedItem = item;
       };
     },
 
@@ -336,7 +378,6 @@ module.exports = function () {
             return;
           }
           var tower = new Tower(this, this.ui.cursor.x, this.ui.cursor.y, this.buildTower.type);
-          tower.anchor.setTo(0.5, 0.5);
 
           // Add sprite to game
           this.add.existing(tower);

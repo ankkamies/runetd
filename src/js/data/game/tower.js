@@ -27,6 +27,7 @@ module.exports = [
     attackSpeed: 1000,
     damage: [30, 40],
     cost: 30,
+    sockets: 4,
     projectileType: 0,
     spritesheet: 'assets/game/towers/twr_offensive.png',
     action: function() {
@@ -42,6 +43,12 @@ module.exports = [
       }
     },
     applyAura: function() {
+      // Add effects from runes
+      for (var i = 0; i < this.sockets.length; i++) {
+        if (this.sockets[i] !== null) {
+          this.sockets[i].offensiveEffect.apply(this);
+        }
+      }
     }
   },
   {
@@ -52,12 +59,34 @@ module.exports = [
     attackSpeed: null,
     damage: null,
     cost: 40,
+    sockets: 3,
     projectileType: 0,
     spritesheet: 'assets/game/towers/twr_defensive.png',
-    action: function() {},
+    action: function() {
+      // Apply AOE effects every second
+      if (this.game.time.now > this.nextFire) {
+        this.nextFire = this.game.time.now + 1000;
+        this.game.enemies.forEach(function (enemy) {
+          if (this.game.physics.arcade.distanceBetween(this, enemy) < this.range) {
+            // Add effects from runes
+            for (var i = 0; i < this.sockets.length; i++) {
+              if (this.sockets[i] !== null) {
+                this.sockets[i].defensiveEffect.apply(enemy, true);
+              }
+            }
+          }
+        }, this);
+      }
+    },
     applyAura: function() {
       this.game.enemies.forEach(function (enemy) {
         if (this.game.physics.arcade.distanceBetween(this, enemy) < this.range) {
+          // Add effects from runes
+          for (var i = 0; i < this.sockets.length; i++) {
+            if (this.sockets[i] !== null) {
+              this.sockets[i].defensiveEffect.apply(enemy);
+            }
+          }
           enemy.speed *= 0.8;
         }
       }, this);
@@ -71,6 +100,7 @@ module.exports = [
     attackSpeed: null,
     damage: null,
     cost: 60,
+    sockets: 2,
     projectileType: 0,
     spritesheet: 'assets/game/towers/twr_support.png',
     action: function() {},
@@ -78,6 +108,12 @@ module.exports = [
       this.game.towers.forEach(function (tower) {
         if (tower.attackSpeed !== null) {
           if (this.game.physics.arcade.distanceBetween(this, tower) < this.range) {
+            // Add effects from runes
+            for (var i = 0; i < this.sockets.length; i++) {
+              if (this.sockets[i] !== null) {
+                this.sockets[i].supportEffect.apply(tower);
+              }
+            }
             tower.attackSpeed *= 0.8;
           }
         }
