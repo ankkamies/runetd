@@ -44,15 +44,12 @@ function Tower (game, x, y, type) {
     this.sockets.push(null);
   }
 
-  // Circle for displaying towers range
+  // Add range circle
   this.rangeCircle = this.game.add.graphics();
-  this.rangeCircle.lineStyle(2, 0x000000, 1);
-  this.rangeCircle.drawCircle(this.x, this.y, this.range * 2);
-  this.rangeCircle.visible = false;
 
   // Add mouseover events for displaying rangeCircle
   this.inputEnabled = true;
-  this.events.onInputOver.add(function() {this.rangeCircle.visible = true;}, this);
+  this.events.onInputOver.add(function() {this.createRangeCircle();}, this);
   this.events.onInputOut.add(function() {this.rangeCircle.visible = false;}, this);
 
   // Create a subgroup for projectiles of this tower
@@ -114,6 +111,14 @@ Tower.prototype.update = function() {
 Tower.prototype.postUpdate = function() {
   // Shoot after everything has been updated so auras get applied
   this.action();
+};
+
+Tower.prototype.createRangeCircle = function() {
+  // Circle for displaying towers range
+  this.rangeCircle.clear();
+  this.rangeCircle.lineStyle(2, 0x000000, 1);
+  this.rangeCircle.drawCircle(this.x, this.y, this.range * 2);
+  this.rangeCircle.visible = true;
 };
 
 Tower.prototype.socketRune = function(rune) {
